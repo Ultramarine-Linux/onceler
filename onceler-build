@@ -40,6 +40,11 @@ def onceler(variant=None):
         print("onceler.cfg not found.")
         sys.exit(1)
 
+    # create .tmp/ if it doesn't exist
+    if not os.path.exists('.tmp'):
+        os.makedirs('.tmp')
+
+
     if variant is None:
         # build everything
         for section in parser.sections():
@@ -49,38 +54,36 @@ def onceler(variant=None):
                 variant_type = parser.get(section, 'type')
                 with click_spinner.spinner():
                     try:
-                        compose = build(variant_type, section.split('-')[1])
+                        variantData = dict(parser[f'variant-{variant}'])
+                        build(variant=variant, variant_data=variantData, type=variant_type)
                     except Exception as e:
                         print(f'Error: {e}')
                         sys.exit(1)
                     finally:
                         typer.echo(f'{section} built.')
-                        typer.echo(f'Output: {compose}')
+
 
     else:
         # build the variant
         variant_type = parser.get(f'variant-{variant}', 'type')
         with click_spinner.spinner():
-            try:
-                compose = build(variant_type, variant)
-            except Exception as e:
-                typer.echo(f'{e}')
-                sys.exit(1)
-            finally:
-                typer.echo(f'{variant} built.')
-                typer.echo(f'Output: {compose}')
+            # print the section as a dict
+            variantData = dict(parser[f'variant-{variant}'])
+            build(variant=variant, variant_data=variantData,type=variant_type) # help i cant read the code
 
+    # delete the .tmp directory if it exists, recursively
+    if os.path.exists('.tmp'):
+        pass
+        #os.system('rm -rf .tmp')
 
-def build(type,variant):
+def build(type,variant_data,variant):
     if type == 'iso':
         # build iso
         lorax.build_iso(
-            variant=variant,
-            product=parser.get('compose', 'project'),
-            bugurl=parser.get('compose', 'bugurl'),
-            version=parser.get('compose', 'releasever'),
-            final=parser.get('compose', 'final'),
-            ks=parser.get(f'variant-{variant}', 'kickstart'),
+            variant=variant_data,
+            variant_name=variant,
+            compose = dict(parser['compose']),
         )
+
 if __name__ == "__main__":
     typer.run(onceler)

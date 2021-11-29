@@ -4,7 +4,7 @@ Release:        1%{?dist}
 Summary:        A Lorax wrapper.
 
 License:        MIT
-Source0:        
+Source0:        https://gitlab.ultramarine-linux.org/release-engineering/onceler/-/archive/main/onceler-main.tar.gz
 
 BuildRequires:  python3-setuptools
 BuildRequires:  python3-devel
@@ -15,7 +15,7 @@ Requires:       pykickstart
 Requires:       lorax
 
 %description
-%{summary}
+The Onceler is a command line wrapper that turns long Live Media Creator (LMC) command line arguments into a simple, human readable config files, similar to the ones used by Pungi.
 
 %prep
 %autosetup -n onceler-main

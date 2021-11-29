@@ -5,46 +5,30 @@ import pylorax.creator as creator
 import pylorax.base
 import pylorax.cmdline
 import os
+import onceler.kickstart as patch
 
-def build_iso(ks, variant,product,bugurl,version, final=False, iso_only=False):
+
+
+
+def build_iso(variant,variant_name,compose,iso_only=False):
     """Build the ISO image"""
     #flatten the kickstart file
-    try:
-        os.system(f"ksflatten --config {ks} --output onceler-output.ks")
-    except Exception as e:
-        print(f"Error: {e}")
-        sys.exit(0)
-    # create a buildstamp file
-    pylorax.buildstamp.BuildStamp(
-        product=product,
-        version=version,
-        bugurl=bugurl,
-        isfinal=final,
-        variant=variant,
-        buildarch='x86_64',
-    ).write('.buildstamp-tmp')
-    # now append a post script to the kickstart file
-    with open('onceler-output.ks', 'a') as f:
-        # buildstamp = content of .buildstamp-tmp
-        f.write('\n\n%post\n')
-        # write a heredoc to the kickstart file
-        f.write('cat << EOF > /.buildstamp\n')
-        f.write(open('.buildstamp-tmp', 'r').read())
-        f.write('EOF\n')
-        f.write('%end\n')
-    # now create the ISO image
-    args = pylorax.cmdline.lmc_parser().parse_args([
-        '--ks', 'onceler-output.ks',
-        '--make-iso',
-        '--project', product,
-        '--releasever', version,
-        '--resultdir', f'build/{variant}',
-        '--no-virt',
-    ])
+    kickstart = variant['kickstart']
+    os.system(f'ksflatten --config {kickstart} --output .tmp/onceler-output.ks')
+    #patch the kickstart file
+    patch.buildstamp(variant=variant_name,compose=compose,ks='.tmp/onceler-output.ks')
+    cli_args = [
+    '--ks', '.tmp/onceler-output.ks',
+    '--no-virt',
+    '--make-iso',
+    '--macboot',
+    '--project', "\"{compose['project']}\"",
+    '--releasever', compose['releasever'],
+    '--logfile', 'logs/build.log',
+    ]
     if iso_only:
-        #append the --iso-only flag to the argparse
-        print('ISO only flag is set, will not output the build tree')
-        args.iso_only = True
-        args.iso_name = f'{product}-{product}-{variant}.iso'
-    compose = creator.run_creator(args)
-    return compose
+        cli_args.append('--iso-only')
+        cli_args.append(f'--output {variant_name}.iso')
+    # now run the build
+    cmd = ' '.join(cli_args)
+    os.system (f'/usr/sbin/livemedia-creator {cmd}')
