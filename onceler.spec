@@ -1,5 +1,5 @@
 Name:           onceler
-Version:        0.1
+Version:        0.1.1
 Release:        1%{?dist}
 Summary:        A Lorax wrapper.
 
