@@ -6,8 +6,7 @@ import pylorax.base
 import pylorax.cmdline
 import os
 import onceler.kickstart as patch
-
-
+import subprocess
 
 
 def build_iso(variant,variant_name,compose,iso_only=False):
@@ -22,13 +21,20 @@ def build_iso(variant,variant_name,compose,iso_only=False):
     '--no-virt',
     '--make-iso',
     '--macboot',
-    '--project', "\"{compose['project']}\"",
+    '--project', f"\"{compose['project']}\"",
     '--releasever', compose['releasever'],
     '--logfile', 'logs/build.log',
+    '--resultdir', 'build',
+    '--compression', 'zstd'
     ]
     if iso_only:
         cli_args.append('--iso-only')
         cli_args.append(f'--output {variant_name}.iso')
     # now run the build
-    cmd = ' '.join(cli_args)
-    os.system (f'/usr/sbin/livemedia-creator {cmd}')
+    cmd = f"sudo /usr/sbin/livemedia-creator {' '.join(cli_args)}"
+    # run the command in a subprocess and capture the output
+    proc = subprocess.run(cmd, shell=True, check=True)
+    # now return the output
+    # wait for the process to finish while returning the output
+    return proc.stdout.decode('utf-8')
+    #os.system(cmd)
