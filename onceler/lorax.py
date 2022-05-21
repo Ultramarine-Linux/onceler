@@ -11,6 +11,11 @@ from .log import get_logger
 
 logger = get_logger(__name__)
 
+
+def remove_dir(path: str):
+    logger.info(f"Removing {path}")
+    return subprocess.run(["rm", "-rf", path])
+
 class Onceler:
     def __init__(self):
         self.config = load_config()
@@ -107,7 +112,7 @@ class Onceler:
                 self.mock.run(args)
                 # remove folder if already exists
                 if os.path.exists(f"build/image/{variant}"):
-                    os.rmdir(f"build/image/{variant}")
+                    remove_dir(f"build/image/{variant}")
                 self.mock.export_file(f"/var/tmp/lmc", f"build/image/{variant}")
             case "docker":
                 logger.info(f"Building Docker image for {variant}")
@@ -121,7 +126,7 @@ class Onceler:
                 self.mock.run(args)
                 # remove folder if already exists
                 if os.path.exists(f"build/image/{variant}"):
-                    os.rmdir(f"build/image/{variant}")
+                    remove_dir(f"build/image/{variant}")
                 self.mock.export_file(f"/var/tmp/lmc", f"build/image/{variant}")
             case "podman":
                 logger.info(f"Building Podman image for {variant}")
@@ -135,13 +140,8 @@ class Onceler:
                 self.mock.run(args)
                 # remove folder if already exists
                 if os.path.exists(f"build/image/{variant}"):
-                    os.rmdir(f"build/image/{variant}")
+                    remove_dir(f"build/image/{variant}")
                 self.mock.export_file(f"/var/tmp/lmc", f"build/image/{variant}")
             case _:
                 logger.critical(f"Unknown or unsupported variant type {variant}")
                 return 1
-
-
-
-once = Onceler()
-once.build("podman")
