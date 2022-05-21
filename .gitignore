@@ -1,6 +1,7 @@
-*.cfg
+*.toml
 __pycache__
 tmp/
 build/
 *.ks
 logs/
+*.egg-info/
